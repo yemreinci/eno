@@ -152,7 +152,7 @@ func TestBuildRequests(t *testing.T) {
 				{
 					Spec: apiv1.CompositionSpec{
 						Bindings: []apiv1.Binding{
-							{Key: "key1", Resource: apiv1.ResourceBinding{}},
+							{Key: "key1", Resource: &apiv1.ResourceBinding{}},
 						},
 					},
 				},
@@ -180,7 +180,7 @@ func TestBuildRequests(t *testing.T) {
 						Bindings: []apiv1.Binding{
 							{
 								Key: "key1",
-								Resource: apiv1.ResourceBinding{
+								Resource: &apiv1.ResourceBinding{
 									Name:      "resource1",
 									Namespace: "namespace1",
 								},
@@ -221,14 +221,14 @@ func TestBuildRequests(t *testing.T) {
 						Bindings: []apiv1.Binding{
 							{
 								Key: "key1",
-								Resource: apiv1.ResourceBinding{
+								Resource: &apiv1.ResourceBinding{
 									Name:      "resource1",
 									Namespace: "namespace1",
 								},
 							},
 							{
 								Key: "key2",
-								Resource: apiv1.ResourceBinding{
+								Resource: &apiv1.ResourceBinding{
 									Name:      "resource2",
 									Namespace: "namespace2",
 								},
@@ -241,7 +241,7 @@ func TestBuildRequests(t *testing.T) {
 						Bindings: []apiv1.Binding{
 							{
 								Key: "key1",
-								Resource: apiv1.ResourceBinding{
+								Resource: &apiv1.ResourceBinding{
 									Name:      "resource3",
 									Namespace: "namespace1",
 								},

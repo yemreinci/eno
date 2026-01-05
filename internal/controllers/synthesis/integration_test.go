@@ -75,7 +75,7 @@ func TestControllerHappyPath(t *testing.T) {
 	// Updating the composition should cause re-synthesis
 	err = retry.RetryOnConflict(testutil.Backoff, func() error {
 		cli.Get(ctx, client.ObjectKeyFromObject(comp), comp)
-		comp.Spec.Bindings = []apiv1.Binding{{Key: "new-binding", Resource: apiv1.ResourceBinding{Name: "test"}}}
+		comp.Spec.Bindings = []apiv1.Binding{{Key: "new-binding", Resource: &apiv1.ResourceBinding{Name: "test"}}}
 		return cli.Update(ctx, comp)
 	})
 	require.NoError(t, err)
@@ -146,7 +146,7 @@ func TestControllerFastCompositionUpdates(t *testing.T) {
 			if client.IgnoreNotFound(err) != nil {
 				return err
 			}
-			comp.Spec.Bindings = []apiv1.Binding{{Key: key, Resource: apiv1.ResourceBinding{Name: "test"}}}
+			comp.Spec.Bindings = []apiv1.Binding{{Key: key, Resource: &apiv1.ResourceBinding{Name: "test"}}}
 			return cli.Update(ctx, comp)
 		})
 		require.NoError(t, err)

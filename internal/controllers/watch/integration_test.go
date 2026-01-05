@@ -42,7 +42,7 @@ func TestBasics(t *testing.T) {
 	comp.Spec.Synthesizer.Name = synth.Name
 	comp.Spec.Bindings = []apiv1.Binding{{
 		Key: "foo",
-		Resource: apiv1.ResourceBinding{
+		Resource: &apiv1.ResourceBinding{
 			Name:      input.Name,
 			Namespace: input.Namespace,
 		},
@@ -110,7 +110,7 @@ func TestDeferredBasics(t *testing.T) {
 	comp.Spec.Synthesizer.Name = synth.Name
 	comp.Spec.Bindings = []apiv1.Binding{{
 		Key: "foo",
-		Resource: apiv1.ResourceBinding{
+		Resource: &apiv1.ResourceBinding{
 			Name:      input.Name,
 			Namespace: input.Namespace,
 		},
@@ -180,7 +180,7 @@ func TestDeferredWithIgnoreSideEffects(t *testing.T) {
 	comp.Spec.Synthesizer.Name = synth.Name
 	comp.Spec.Bindings = []apiv1.Binding{{
 		Key: "foo",
-		Resource: apiv1.ResourceBinding{
+		Resource: &apiv1.ResourceBinding{
 			Name:      input.Name,
 			Namespace: input.Namespace,
 		},
@@ -297,7 +297,7 @@ func TestBasicsImplicitBindingConflict(t *testing.T) {
 	comp.Spec.Synthesizer.Name = synth.Name
 	comp.Spec.Bindings = []apiv1.Binding{{
 		Key: "foo",
-		Resource: apiv1.ResourceBinding{
+		Resource: &apiv1.ResourceBinding{
 			Name:      input.Name,
 			Namespace: input.Namespace,
 		},
@@ -346,7 +346,7 @@ func TestCompositionChange(t *testing.T) {
 	comp.Spec.Synthesizer.Name = synth.Name
 	comp.Spec.Bindings = []apiv1.Binding{{
 		Key: "foo",
-		Resource: apiv1.ResourceBinding{
+		Resource: &apiv1.ResourceBinding{
 			Name:      input.Name,
 			Namespace: input.Namespace,
 		},
@@ -366,7 +366,7 @@ func TestCompositionChange(t *testing.T) {
 	comp2.Spec.Synthesizer.Name = synth.Name
 	comp2.Spec.Bindings = []apiv1.Binding{{
 		Key: "foo",
-		Resource: apiv1.ResourceBinding{
+		Resource: &apiv1.ResourceBinding{
 			Name:      input.Name,
 			Namespace: input.Namespace,
 		},
@@ -411,7 +411,7 @@ func TestSynthesizerChange(t *testing.T) {
 	comp.Spec.Synthesizer.Name = synth.Name
 	comp.Spec.Bindings = []apiv1.Binding{{
 		Key: "foo",
-		Resource: apiv1.ResourceBinding{
+		Resource: &apiv1.ResourceBinding{
 			Name:      input.Name,
 			Namespace: input.Namespace,
 		},
@@ -431,7 +431,7 @@ func TestSynthesizerChange(t *testing.T) {
 	comp2.Spec.Synthesizer.Name = synth.Name
 	comp2.Spec.Bindings = []apiv1.Binding{{
 		Key: "bar", // not the current key
-		Resource: apiv1.ResourceBinding{
+		Resource: &apiv1.ResourceBinding{
 			Name:      input.Name,
 			Namespace: input.Namespace,
 		},
@@ -490,7 +490,7 @@ func TestRemoveInput(t *testing.T) {
 	comp.Spec.Synthesizer.Name = synth.Name
 	comp.Spec.Bindings = []apiv1.Binding{{
 		Key: "foo",
-		Resource: apiv1.ResourceBinding{
+		Resource: &apiv1.ResourceBinding{
 			Name:      input.Name,
 			Namespace: input.Namespace,
 		},
@@ -562,14 +562,14 @@ func TestOptionalInputCreatedLater(t *testing.T) {
 	comp.Spec.Bindings = []apiv1.Binding{
 		{
 			Key: "required",
-			Resource: apiv1.ResourceBinding{
+			Resource: &apiv1.ResourceBinding{
 				Name:      requiredInput.Name,
 				Namespace: requiredInput.Namespace,
 			},
 		},
 		{
 			Key: "optional",
-			Resource: apiv1.ResourceBinding{
+			Resource: &apiv1.ResourceBinding{
 				Name:      "optional-input",
 				Namespace: "default",
 			},

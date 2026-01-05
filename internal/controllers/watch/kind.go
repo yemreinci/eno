@@ -154,11 +154,14 @@ func (k *KindWatchController) buildRequests(synth *apiv1.Synthesizer, comps ...a
 				continue
 			}
 
-			nsn := types.NamespacedName{Namespace: binding.Resource.Namespace, Name: binding.Resource.Name}
-			req := reconcile.Request{NamespacedName: nsn}
-			if !slices.Contains(reqs, req) {
-				reqs = append(reqs, req)
+			if binding.Resource != nil {
+				nsn := types.NamespacedName{Namespace: binding.Resource.Namespace, Name: binding.Resource.Name}
+				req := reconcile.Request{NamespacedName: nsn}
+				if !slices.Contains(reqs, req) {
+					reqs = append(reqs, req)
+				}
 			}
+			// TODO: Handle ResourceSelector case when implementing selector-based input feature
 		}
 	}
 

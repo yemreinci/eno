@@ -34,7 +34,10 @@ func indexResourceBindings() client.IndexerFunc {
 
 		keys := []string{}
 		for _, binding := range comp.Spec.Bindings {
-			keys = append(keys, path.Join(comp.Spec.Synthesizer.Name, binding.Resource.Namespace, binding.Resource.Name))
+			if binding.Resource != nil {
+				keys = append(keys, path.Join(comp.Spec.Synthesizer.Name, binding.Resource.Namespace, binding.Resource.Name))
+			}
+			// TODO: Handle ResourceSelector case when implementing selector-based input feature
 		}
 		return keys
 	}

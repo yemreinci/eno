@@ -145,40 +145,94 @@ func (e *Executor) buildPodInput(ctx context.Context, comp *apiv1.Composition, s
 			unstructured.SetNestedStringSlice(rl.FunctionConfig.Object, optRefs, "optionalRefs")
 		}
 
-		// Get the resource
+		// Get the resource(s)
 		start := time.Now()
-		obj := &unstructured.Unstructured{}
-		obj.SetGroupVersionKind(schema.GroupVersionKind{Group: r.Resource.Group, Version: r.Resource.Version, Kind: r.Resource.Kind})
 		b, ok := bindings[key]
-		if ok {
-			obj.SetName(b.Resource.Name)
-			obj.SetNamespace(b.Resource.Namespace)
-		} else {
-			obj.SetName(r.Resource.Name)
-			obj.SetNamespace(r.Resource.Namespace)
-		}
 
-		err := e.Reader.Get(ctx, client.ObjectKeyFromObject(obj), obj)
-		if err != nil {
-			// If the ref is optional and the resource is not found, skip it
-			if r.Optional && errors.IsNotFound(err) {
-				logger.V(1).Info("skipping optional input that was not found", "key", key)
-				continue
+		if ok && b.ResourceSelector != nil {
+			// Handle selector-based binding - fetch multiple resources
+			list := &unstructured.UnstructuredList{}
+			list.SetGroupVersionKind(schema.GroupVersionKind{
+				Group:   r.Resource.Group,
+				Version: r.Resource.Version,
+				Kind:    r.Resource.Kind + "List",
+			})
+
+			listOpts := []client.ListOption{
+				client.MatchingLabels(b.ResourceSelector.MatchLabels),
 			}
-			logger.Error(err, "failed to get resource for input reference", "key", key, "name", obj.GetName(), "namespace", obj.GetNamespace())
-			return nil, nil, fmt.Errorf("getting resource for ref %q: %w", key, err)
-		}
-		anno := obj.GetAnnotations()
-		if anno == nil {
-			anno = map[string]string{}
-		}
-		anno["eno.azure.io/input-key"] = key
-		obj.SetAnnotations(anno)
-		rl.Items = append(rl.Items, obj)
-		logger.Info("retrieved input", "key", key, "latency", time.Since(start).Abs().Milliseconds())
 
-		// Store the revision to be written to the synthesis status later
-		revs = append(revs, *apiv1.NewInputRevisions(obj, key))
+			err := e.Reader.List(ctx, list, listOpts...)
+			if err != nil {
+				if r.Optional && errors.IsNotFound(err) {
+					logger.V(1).Info("skipping optional input that was not found", "key", key)
+					continue
+				}
+				logger.Error(err, "failed to list resources for input reference", "key", key, "selector", b.ResourceSelector.MatchLabels)
+				return nil, nil, fmt.Errorf("listing resources for ref %q: %w", key, err)
+			}
+
+			// Create a List object to wrap the results
+			listObj := &unstructured.Unstructured{}
+			listObj.SetGroupVersionKind(schema.GroupVersionKind{
+				Group:   "",
+				Version: "v1",
+				Kind:    "List",
+			})
+			// Set the items field directly in the object
+			items := make([]interface{}, len(list.Items))
+			for i, item := range list.Items {
+				items[i] = item.Object
+			}
+			listObj.Object["items"] = items
+
+			anno := listObj.GetAnnotations()
+			if anno == nil {
+				anno = map[string]string{}
+			}
+			anno["eno.azure.io/input-key"] = key
+			listObj.SetAnnotations(anno)
+
+			rl.Items = append(rl.Items, listObj)
+			logger.Info("retrieved input list", "key", key, "count", len(list.Items), "latency", time.Since(start).Abs().Milliseconds())
+
+			revs = append(revs, *apiv1.NewInputRevisions(&list.Items[0], key))
+		} else {
+			// Handle single resource binding (existing logic)
+			obj := &unstructured.Unstructured{}
+			obj.SetGroupVersionKind(schema.GroupVersionKind{Group: r.Resource.Group, Version: r.Resource.Version, Kind: r.Resource.Kind})
+
+			if ok && b.Resource != nil {
+				obj.SetName(b.Resource.Name)
+				obj.SetNamespace(b.Resource.Namespace)
+			} else {
+				// Implicit binding from the ref
+				obj.SetName(r.Resource.Name)
+				obj.SetNamespace(r.Resource.Namespace)
+			}
+
+			err := e.Reader.Get(ctx, client.ObjectKeyFromObject(obj), obj)
+			if err != nil {
+				// If the ref is optional and the resource is not found, skip it
+				if r.Optional && errors.IsNotFound(err) {
+					logger.V(1).Info("skipping optional input that was not found", "key", key)
+					continue
+				}
+				logger.Error(err, "failed to get resource for input reference", "key", key, "name", obj.GetName(), "namespace", obj.GetNamespace())
+				return nil, nil, fmt.Errorf("getting resource for ref %q: %w", key, err)
+			}
+			anno := obj.GetAnnotations()
+			if anno == nil {
+				anno = map[string]string{}
+			}
+			anno["eno.azure.io/input-key"] = key
+			obj.SetAnnotations(anno)
+			rl.Items = append(rl.Items, obj)
+			logger.Info("retrieved input", "key", key, "latency", time.Since(start).Abs().Milliseconds())
+
+			// Store the revision to be written to the synthesis status later
+			revs = append(revs, *apiv1.NewInputRevisions(obj, key))
+		}
 	}
 
 	logger.Info("completed building synthesizer input", "inputCount", len(rl.Items))

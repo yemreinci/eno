@@ -32,17 +32,37 @@ type InputResource struct {
 
 // Bindings map a specific Kubernetes resource to a ref exposed by a synthesizer.
 // Compositions use bindings to populate inputs supported by their synthesizer.
+// +kubebuilder:validation:XValidation:rule="!(has(self.resource) && has(self.resourceSelector))",message="at most one of resource or resourceSelector can be set"
 type Binding struct {
 	// Key determines which ref this binding binds to. Opaque.
 	Key string `json:"key"`
 
-	Resource ResourceBinding `json:"resource"`
+	// Resource specifies a single resource by name and namespace.
+	// Mutually exclusive with ResourceSelector.
+	// +optional
+	Resource *ResourceBinding `json:"resource,omitempty"`
+
+	// ResourceSelector specifies a set of resources using label selectors.
+	// Mutually exclusive with Resource.
+	// +optional
+	ResourceSelector *ResourceSelector `json:"resourceSelector,omitempty"`
 }
 
 // A reference to a specific resource name and optionally namespace.
 type ResourceBinding struct {
 	Name      string `json:"name"`
 	Namespace string `json:"namespace,omitempty"`
+}
+
+// ResourceSelector selects a set of resources using various selector mechanisms.
+type ResourceSelector struct {
+	// MatchLabels selects resources with labels matching all key-value pairs.
+	// When specified, all resources with these labels will be selected as inputs.
+	// +optional
+	MatchLabels map[string]string `json:"matchLabels,omitempty"`
+
+	// Future extensibility: Additional selector types can be added here.
+	// Examples: MatchExpressions, FieldSelectors, etc.
 }
 
 // Ref defines a synthesizer input.

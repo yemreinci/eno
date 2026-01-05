@@ -31,11 +31,11 @@ func TestBasics(t *testing.T) {
 	sym.Spec.Bindings = []apiv1.Binding{
 		{
 			Key:      "foo",
-			Resource: apiv1.ResourceBinding{Name: "test-resource-1"},
+			Resource: &apiv1.ResourceBinding{Name: "test-resource-1"},
 		},
 		{
 			Key:      "bar",
-			Resource: apiv1.ResourceBinding{Name: "test-resource-2"},
+			Resource: &apiv1.ResourceBinding{Name: "test-resource-2"},
 		},
 	}
 	sym.Spec.Variations = []apiv1.Variation{
@@ -110,7 +110,7 @@ func TestBasics(t *testing.T) {
 	// Update the bindings and prove the new bindings are replicated to the compositions
 	err = retry.RetryOnConflict(testutil.Backoff, func() error {
 		cli.Get(ctx, client.ObjectKeyFromObject(sym), sym)
-		sym.Spec.Bindings = []apiv1.Binding{{Key: "new-binding", Resource: apiv1.ResourceBinding{Name: "foo"}}}
+		sym.Spec.Bindings = []apiv1.Binding{{Key: "new-binding", Resource: &apiv1.ResourceBinding{Name: "foo"}}}
 		return cli.Update(ctx, sym)
 	})
 	require.NoError(t, err)
@@ -445,18 +445,18 @@ func TestGetBindings(t *testing.T) {
 			name: "variation takes precedence over symphony",
 			variation: apiv1.Variation{
 				Bindings: []apiv1.Binding{
-					{Key: "bnd-1", Resource: apiv1.ResourceBinding{Name: "from-variation"}},
+					{Key: "bnd-1", Resource: &apiv1.ResourceBinding{Name: "from-variation"}},
 				},
 			},
 			symph: apiv1.Symphony{
 				Spec: apiv1.SymphonySpec{
 					Bindings: []apiv1.Binding{
-						{Key: "bnd-1", Resource: apiv1.ResourceBinding{Name: "from-symphony"}},
+						{Key: "bnd-1", Resource: &apiv1.ResourceBinding{Name: "from-symphony"}},
 					},
 				},
 			},
 			expectedBindings: []apiv1.Binding{
-				{Key: "bnd-1", Resource: apiv1.ResourceBinding{Name: "from-variation"}},
+				{Key: "bnd-1", Resource: &apiv1.ResourceBinding{Name: "from-variation"}},
 			},
 		},
 	}

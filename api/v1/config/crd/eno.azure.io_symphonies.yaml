@@ -57,8 +57,9 @@ spec:
                         Opaque.
                       type: string
                     resource:
-                      description: A reference to a specific resource name and optionally
-                        namespace.
+                      description: |-
+                        Resource specifies a single resource by name and namespace.
+                        Mutually exclusive with ResourceSelector.
                       properties:
                         name:
                           type: string
@@ -67,10 +68,25 @@ spec:
                       required:
                       - name
                       type: object
+                    resourceSelector:
+                      description: |-
+                        ResourceSelector specifies a set of resources using label selectors.
+                        Mutually exclusive with Resource.
+                      properties:
+                        matchLabels:
+                          additionalProperties:
+                            type: string
+                          description: |-
+                            MatchLabels selects resources with labels matching all key-value pairs.
+                            When specified, all resources with these labels will be selected as inputs.
+                          type: object
+                      type: object
                   required:
                   - key
-                  - resource
                   type: object
+                  x-kubernetes-validations:
+                  - message: at most one of resource or resourceSelector can be set
+                    rule: '!(has(self.resource) && has(self.resourceSelector))'
                 type: array
               synthesisEnv:
                 description: |-
@@ -114,8 +130,9 @@ spec:
                               to. Opaque.
                             type: string
                           resource:
-                            description: A reference to a specific resource name and
-                              optionally namespace.
+                            description: |-
+                              Resource specifies a single resource by name and namespace.
+                              Mutually exclusive with ResourceSelector.
                             properties:
                               name:
                                 type: string
@@ -124,10 +141,26 @@ spec:
                             required:
                             - name
                             type: object
+                          resourceSelector:
+                            description: |-
+                              ResourceSelector specifies a set of resources using label selectors.
+                              Mutually exclusive with Resource.
+                            properties:
+                              matchLabels:
+                                additionalProperties:
+                                  type: string
+                                description: |-
+                                  MatchLabels selects resources with labels matching all key-value pairs.
+                                  When specified, all resources with these labels will be selected as inputs.
+                                type: object
+                            type: object
                         required:
                         - key
-                        - resource
                         type: object
+                        x-kubernetes-validations:
+                        - message: at most one of resource or resourceSelector can
+                            be set
+                          rule: '!(has(self.resource) && has(self.resourceSelector))'
                       type: array
                     labels:
                       additionalProperties:

@@ -210,7 +210,7 @@ func TestDeferredInput(t *testing.T) {
 	comp.Namespace = "default"
 	comp.Finalizers = []string{"eno.azure.io/cleanup"}
 	comp.Spec.Synthesizer.Name = synth.Name
-	comp.Spec.Bindings = []apiv1.Binding{{Key: "foo", Resource: apiv1.ResourceBinding{Name: "test-input"}}}
+	comp.Spec.Bindings = []apiv1.Binding{{Key: "foo", Resource: &apiv1.ResourceBinding{Name: "test-input"}}}
 	require.NoError(t, cli.Create(ctx, comp))
 
 	comp.Status.InputRevisions = []apiv1.InputRevisions{{Key: "foo", ResourceVersion: "bar"}}

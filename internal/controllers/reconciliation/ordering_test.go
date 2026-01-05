@@ -304,19 +304,19 @@ func TestInputMismatch(t *testing.T) {
 	comp.Spec.Synthesizer.Name = syn.Name
 	comp.Spec.Bindings = []apiv1.Binding{{
 		Key: "foo",
-		Resource: apiv1.ResourceBinding{
+		Resource: &apiv1.ResourceBinding{
 			Name:      "input1",
 			Namespace: "default",
 		},
 	}, {
 		Key: "bar",
-		Resource: apiv1.ResourceBinding{
+		Resource: &apiv1.ResourceBinding{
 			Name:      "input2",
 			Namespace: "default",
 		},
 	}, {
 		Key: "baz",
-		Resource: apiv1.ResourceBinding{
+		Resource: &apiv1.ResourceBinding{
 			Name:      "input3",
 			Namespace: "default",
 		},
@@ -379,7 +379,7 @@ func TestInputSynthesizerOrdering(t *testing.T) {
 	comp.Spec.Synthesizer.Name = syn.Name
 	comp.Spec.Bindings = []apiv1.Binding{{
 		Key: "foo",
-		Resource: apiv1.ResourceBinding{
+		Resource: &apiv1.ResourceBinding{
 			Name:      "input1",
 			Namespace: "default",
 		},
@@ -451,7 +451,7 @@ func TestInputCompositionGenerationOrdering(t *testing.T) {
 	comp.Spec.Synthesizer.Name = syn.Name
 	comp.Spec.Bindings = []apiv1.Binding{{
 		Key: "foo",
-		Resource: apiv1.ResourceBinding{
+		Resource: &apiv1.ResourceBinding{
 			Name:      "input1",
 			Namespace: "default",
 		},

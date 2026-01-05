@@ -1,0 +1,69 @@
+apiVersion: eno.azure.io/v1
+kind: Synthesizer
+metadata:
+  name: python-input-mirror-synth
+spec:
+  image: $REGISTRY/python-input-mirror
+  command:
+  - python3
+  - /app/main.py
+  refs:
+    - key: input1
+      resource:
+        group: "" # core
+        version: "v1"
+        kind: ConfigMap
+    - key: input2
+      optional: true
+      resource:
+        group: "" # core
+        version: "v1"
+        kind: ConfigMap
+---
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: some-input
+data:
+  example-key: example-value
+---
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: dynamic-input-1
+  labels:
+    foo: bar
+data:
+  example-key: example-value
+
+---
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: dynamic-input-2
+  labels:
+    foo: bar
+data:
+  example-key: example-value
+
+---
+
+apiVersion: eno.azure.io/v1
+kind: Composition
+metadata:
+  name: python-input-mirror-comp
+spec:
+  synthesizer:
+    name: python-input-mirror-synth
+  bindings:
+    - key: input1
+      resource:
+        name: some-input
+        namespace: default
+    - key: input2
+      resourceSelector:
+        matchLabels:
+          foo: bar

@@ -41,8 +41,8 @@ func TestFuzzNewOp(t *testing.T) {
 			ObjectMeta: metav1.ObjectMeta{Name: "test-comp", Finalizers: []string{"eno.azure.io/cleanup"}, Generation: 1},
 			Spec: apiv1.CompositionSpec{
 				Bindings: []apiv1.Binding{
-					{Key: "foo", Resource: apiv1.ResourceBinding{Name: "foo"}},
-					{Key: "bar", Resource: apiv1.ResourceBinding{Name: "bar"}},
+					{Key: "foo", Resource: &apiv1.ResourceBinding{Name: "foo"}},
+					{Key: "bar", Resource: &apiv1.ResourceBinding{Name: "bar"}},
 				},
 			},
 			Status: apiv1.CompositionStatus{
@@ -498,7 +498,7 @@ func TestOpNewerInputInSynthesis(t *testing.T) {
 		ObjectMeta: metav1.ObjectMeta{Name: "test-comp", Finalizers: []string{"eno.azure.io/cleanup"}, Generation: 1},
 		Spec: apiv1.CompositionSpec{
 			Bindings: []apiv1.Binding{
-				{Key: "foo", Resource: apiv1.ResourceBinding{Name: "foo"}},
+				{Key: "foo", Resource: &apiv1.ResourceBinding{Name: "foo"}},
 			},
 		},
 		Status: apiv1.CompositionStatus{

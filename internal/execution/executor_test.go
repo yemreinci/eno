@@ -139,7 +139,7 @@ func TestWithInputs(t *testing.T) {
 	comp.Namespace = "default"
 	comp.Spec.Bindings = []apiv1.Binding{{
 		Key: "foo",
-		Resource: apiv1.ResourceBinding{
+		Resource: &apiv1.ResourceBinding{
 			Name:      input.Name,
 			Namespace: input.Namespace,
 		},
@@ -300,7 +300,7 @@ func TestWithVersionedInput(t *testing.T) {
 	comp.Namespace = "default"
 	comp.Spec.Bindings = []apiv1.Binding{{
 		Key: "foo",
-		Resource: apiv1.ResourceBinding{
+		Resource: &apiv1.ResourceBinding{
 			Name:      input.Name,
 			Namespace: input.Namespace,
 		},
@@ -890,14 +890,14 @@ func TestWithOptionalInputs(t *testing.T) {
 		comp.Spec.Bindings = []apiv1.Binding{
 			{
 				Key: "required",
-				Resource: apiv1.ResourceBinding{
+				Resource: &apiv1.ResourceBinding{
 					Name:      requiredInput.Name,
 					Namespace: requiredInput.Namespace,
 				},
 			},
 			{
 				Key: "optional",
-				Resource: apiv1.ResourceBinding{
+				Resource: &apiv1.ResourceBinding{
 					Name:      "missing-input",
 					Namespace: "default",
 				},
@@ -994,14 +994,14 @@ func TestWithOptionalInputs(t *testing.T) {
 		comp.Spec.Bindings = []apiv1.Binding{
 			{
 				Key: "required",
-				Resource: apiv1.ResourceBinding{
+				Resource: &apiv1.ResourceBinding{
 					Name:      requiredInput.Name,
 					Namespace: requiredInput.Namespace,
 				},
 			},
 			{
 				Key: "optional",
-				Resource: apiv1.ResourceBinding{
+				Resource: &apiv1.ResourceBinding{
 					Name:      optionalInput.Name,
 					Namespace: optionalInput.Namespace,
 				},

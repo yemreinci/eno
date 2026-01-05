@@ -538,7 +538,7 @@ func TestOptionalInputMissing(t *testing.T) {
 	comp.Name = "test-comp"
 	comp.Namespace = "default"
 	comp.Spec.Synthesizer.Name = syn.Name
-	comp.Spec.Bindings = []apiv1.Binding{{Key: "optional-ref", Resource: apiv1.ResourceBinding{
+	comp.Spec.Bindings = []apiv1.Binding{{Key: "optional-ref", Resource: &apiv1.ResourceBinding{
 		Name:      "missing",
 		Namespace: "default",
 	}}}
