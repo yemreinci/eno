@@ -196,7 +196,20 @@ func (e *Executor) buildPodInput(ctx context.Context, comp *apiv1.Composition, s
 			rl.Items = append(rl.Items, listObj)
 			logger.Info("retrieved input list", "key", key, "count", len(list.Items), "latency", time.Since(start).Abs().Milliseconds())
 
-			revs = append(revs, *apiv1.NewInputRevisions(&list.Items[0], key))
+			// Find the item with the highest ResourceVersion to track as the input revision
+			var maxRevItem *unstructured.Unstructured
+			if len(list.Items) > 0 {
+				maxRevItem = &list.Items[0]
+				maxRev := apiv1.NewInputRevisions(maxRevItem, key)
+				for i := 1; i < len(list.Items); i++ {
+					itemRev := apiv1.NewInputRevisions(&list.Items[i], key)
+					if maxRev.Less(*itemRev) {
+						maxRev = itemRev
+						maxRevItem = &list.Items[i]
+					}
+				}
+				revs = append(revs, *apiv1.NewInputRevisions(maxRevItem, key))
+			}
 		} else {
 			// Handle single resource binding (existing logic)
 			obj := &unstructured.Unstructured{}

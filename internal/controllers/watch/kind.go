@@ -7,6 +7,7 @@ import (
 	"path"
 	"reflect"
 	"slices"
+	"strconv"
 	"time"
 
 	apiv1 "github.com/Azure/eno/api/v1"
@@ -238,6 +239,124 @@ func (k *KindWatchController) Reconcile(ctx context.Context, req ctrl.Request) (
 		modified, err := k.updateCompositions(ctx, logger, &synth, meta, list, isDeleted)
 		if modified || err != nil {
 			return ctrl.Result{}, err
+		}
+	}
+
+	// Loop over all compositions that have a ResourceSelector binding.
+	// For each, do a list call using the matchLabels and find the highest resourceVersion.
+	// Update the InputRevisions of each composition accordingly if the new highest value differs.
+	allComps := &apiv1.CompositionList{}
+	err = k.client.List(ctx, allComps)
+	if err != nil {
+		logger.Error(err, "failed to list all compositions for ResourceSelector processing")
+		return ctrl.Result{}, fmt.Errorf("listing compositions: %w", err)
+	}
+
+	for _, comp := range allComps.Items {
+		if comp.Spec.Synthesizer.Name == "" {
+			continue
+		}
+
+		// Get the synthesizer for this composition
+		synth := &apiv1.Synthesizer{}
+		err = k.client.Get(ctx, types.NamespacedName{Name: comp.Spec.Synthesizer.Name}, synth)
+		if err != nil {
+			logger.V(1).Info("failed to get synthesizer for ResourceSelector processing", "synthesizerName", comp.Spec.Synthesizer.Name, "error", err)
+			continue
+		}
+
+		// Check each binding for ResourceSelector
+		for _, binding := range comp.Spec.Bindings {
+			if binding.ResourceSelector == nil {
+				continue
+			}
+
+			// Find the matching ref in the synthesizer
+			var matchingRef *apiv1.Ref
+			for i, ref := range synth.Spec.Refs {
+				if ref.Key == binding.Key {
+					matchingRef = &synth.Spec.Refs[i]
+					break
+				}
+			}
+
+			if matchingRef == nil {
+				continue
+			}
+
+			// Check if this ref matches our GVK
+			if matchingRef.Resource.Group != k.gvk.Group ||
+				matchingRef.Resource.Version != k.gvk.Version ||
+				matchingRef.Resource.Kind != k.gvk.Kind {
+				continue
+			}
+
+			// Do a list call with the matchLabels
+			resourceList := &metav1.PartialObjectMetadataList{}
+			resourceList.SetGroupVersionKind(schema.GroupVersionKind{
+				Group:   k.gvk.Group,
+				Version: k.gvk.Version,
+				Kind:    k.gvk.Kind + "List",
+			})
+
+			listOpts := []client.ListOption{
+				client.MatchingLabels(binding.ResourceSelector.MatchLabels),
+			}
+
+			err = k.client.List(ctx, resourceList, listOpts...)
+			if err != nil {
+				logger.Error(err, "failed to list resources with selector", "binding", binding.Key, "selector", binding.ResourceSelector.MatchLabels)
+				continue
+			}
+
+			// Find the highest resourceVersion
+			var highestRV int64
+			var highestResourceVersion string
+			for _, item := range resourceList.Items {
+				rv := item.GetResourceVersion()
+				if rv == "" {
+					continue
+				}
+				// Parse as integer for proper comparison
+				rvInt, parseErr := strconv.ParseInt(rv, 10, 64)
+				if parseErr != nil {
+					// Fallback to string comparison if not numeric
+					if rv > highestResourceVersion {
+						highestResourceVersion = rv
+					}
+					continue
+				}
+				if rvInt > highestRV {
+					highestRV = rvInt
+					highestResourceVersion = rv
+				}
+			}
+
+			// Update the InputRevisions if changed
+			var modified bool
+			if highestResourceVersion != "" {
+				revs := &apiv1.InputRevisions{
+					Key:             binding.Key,
+					ResourceVersion: highestResourceVersion,
+				}
+				modified = setInputRevisions(&comp, revs)
+			} else if isOptionalRef(synth, binding.Key) {
+				// No resources matched, remove if optional
+				modified = removeInputRevision(&comp, binding.Key)
+			}
+
+			if modified {
+				err = k.client.Status().Update(ctx, &comp)
+				if errors.IsConflict(err) {
+					logger.V(1).Info("composition was modified during ResourceSelector reconciliation - will retry", "compositionName", comp.Name)
+					continue
+				}
+				if err != nil {
+					logger.Error(err, "failed to update composition InputRevisions for ResourceSelector", "compositionName", comp.Name)
+					continue
+				}
+				logger.V(1).Info("updated ResourceSelector input resource version", "compositionName", comp.Name, "compositionNamespace", comp.Namespace, "ref", binding.Key, "resourceVersion", highestResourceVersion)
+			}
 		}
 	}
 

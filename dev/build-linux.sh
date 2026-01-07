@@ -7,7 +7,7 @@ if [[ -z "${REGISTRY}" ]]; then
     exit 1
 fi
 
-export TAG="$(date +%s)"
+# export TAG="$(date +%s)"
 
 function build() {
     cmd=$(basename $1)

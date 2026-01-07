@@ -1,5 +1,5 @@
 ifndef TAG
-	TAG ?= $(shell git rev-parse --short=7 HEAD)
+	TAG ?= $(shell date +%s)
 endif
 
 ENO_CONTROLLER_IMAGE_VERSION ?= $(TAG)
@@ -26,3 +26,13 @@ docker-build-eno-reconciler:
 setup-testenv:
 	@echo "Installing controller-runtime testenv binaries..."
 	@go run sigs.k8s.io/controller-runtime/tools/setup-envtest@latest use -p path
+
+.PHONY: builddeploy
+builddeploy: 
+	@echo "Using TAG=$(TAG)"
+	@echo "Building..."
+	TAG=$(TAG) ./dev/build-linux.sh 
+	@echo "Applying CRDs..."
+	kubectl apply -f api/v1/config/crd/
+	@echo "Deploying..."
+	TAG=$(TAG) envsubst < dev/deploy.yaml | kubectl apply -f -

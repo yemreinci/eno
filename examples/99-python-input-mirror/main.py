@@ -10,7 +10,7 @@ configmap = {
     "apiVersion": "v1",
     "kind": "ConfigMap",
     "metadata": {
-        "name": "input-mirror",
+        "name": "mirror-output",
         "namespace": "default"
     },
     "data": {
